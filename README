@@ -1,3 +1,8 @@
+Learn about the plugin on the plugin page: 
+http://www.seodenver.com/add-google-analytics-link-tagging-yourls/
+
+== Changelog ==
+
 = 1.0.1 =
 * Stripped 's' query arg when using bookmarklet
 
