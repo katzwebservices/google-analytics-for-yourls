@@ -381,6 +381,11 @@ function kws_yourls_add_analytics_tracking_code($return, $keyword, $field, $notf
 	
 	// If we are working with a long URL, then let's get to it!
 	$url = $return;
+
+	// Don't create a non-empty URL from an empty URL (i.e. one that was not in the database) since YOURLS depends on emptiness in yourls-go.php
+	if (empty($url)) {
+		return $return;
+	}
 	
 	$parsed = parse_url($url);
 		$parsed['scheme'] = isset($parsed['scheme']) ? $parsed['scheme'] : 'http';
