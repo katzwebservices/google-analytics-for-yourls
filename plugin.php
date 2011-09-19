@@ -15,7 +15,7 @@ if(function_exists('yourls_register_plugin_page')) {
 	// Register our plugin admin page
 	yourls_add_action( 'plugins_loaded', 'kws_yourls_add_analytics_add_page' );
 	function kws_yourls_add_analytics_add_page() {
-	        yourls_register_plugin_page( 'google_analytics', 'Google Analtyics', 'kws_yourls_add_analytics_do_page' );
+	        yourls_register_plugin_page( 'google_analytics', 'Google Analytics', 'kws_yourls_add_analytics_do_page' );
 	        // parameters: page slug, page title, and function that will display the page itself
 	}
 
