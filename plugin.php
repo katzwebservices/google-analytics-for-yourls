@@ -217,25 +217,6 @@ if(function_exists('yourls_register_plugin_page')) {
 }
 
 
-yourls_add_action('loader_failed', 'kws_yourls_redirect_go');
-
-function kws_yourls_redirect_go() {
-	if(isset($_SERVER['REQUEST_URI'])) {
-		preg_match('/(.*?)\?(.+)/', $_SERVER['REQUEST_URI'], $matches);
-		
-		if(!isset($matches[1])) {
-			return;
-		}
-		if(yourls_keyword_is_taken($matches[1])) {
-			$keyword = yourls_sanitize_keyword( $matches[1] );
-			yourls_do_action( 'load_template_go', $keyword );
-			include( YOURLS_ABSPATH.'/yourls-go.php' );
-			exit;
-		}
-	}
-}
-
-
 yourls_add_filter( 'custom_url', 'kws_yourls_custom_url', 999);
 
 function kws_yourls_custom_url($url = '') {
@@ -400,6 +381,11 @@ function kws_yourls_add_analytics_tracking_code($return, $keyword, $field, $notf
 	
 	// If we are working with a long URL, then let's get to it!
 	$url = $return;
+
+	// Don't create a non-empty URL from an empty URL (i.e. one that was not in the database) since YOURLS depends on emptiness in yourls-go.php
+	if (empty($url)) {
+		return $return;
+	}
 	
 	$parsed = parse_url($url);
 		$parsed['scheme'] = isset($parsed['scheme']) ? $parsed['scheme'] : 'http';
