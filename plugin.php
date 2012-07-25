@@ -3,7 +3,7 @@
 Plugin Name: Google Analytics
 Plugin URI: http://www.seodenver.com/yourls-analytics/
 Description: Easily add Google Analytics tracking tags to your generated links.
-Version: 1.0.1
+Version: 1.0.2
 Author: Katz Web Services, Inc.
 Author URI: http://www.katzwebservices.com
 Settings: <a href="?page=google_analytics">Configure settings</a>
