@@ -3,7 +3,7 @@
 Plugin Name: Google Analytics
 Plugin URI: http://www.seodenver.com/yourls-analytics/
 Description: Easily add Google Analytics tracking tags to your generated links.
-Version: 1.0.2
+Version: 1.0.3
 Author: Katz Web Services, Inc.
 Author URI: http://www.katzwebservices.com
 Settings: <a href="?page=google_analytics">Configure settings</a>
@@ -11,211 +11,209 @@ Settings: <a href="?page=google_analytics">Configure settings</a>
 
 if(!function_exists('yourls_add_filter') || !defined('YOURLS_SITE')) { return; }
 
-if(function_exists('yourls_register_plugin_page')) {
-	// Register our plugin admin page
-	yourls_add_action( 'plugins_loaded', 'kws_yourls_add_analytics_add_page' );
-	function kws_yourls_add_analytics_add_page() {
-	        yourls_register_plugin_page( 'google_analytics', 'Google Analytics', 'kws_yourls_add_analytics_do_page' );
-	        // parameters: page slug, page title, and function that will display the page itself
-	}
-
-	function kws_yourls_analytics_defaults() {
-		// Define defaults
-		$utm_campaign = $keyword;
-		$utm_medium = 'urlshortener';
-		$utm_term = $utm_content = '';
-		$utm_source = preg_replace('/(?:.*?)\:\/\/(.+)/ism', '$1', YOURLS_SITE); // http://exam.pl becomes exam.pl
-		
-		$query = array(
-		    'utm_source' => $utm_source,
-		    'utm_medium' => $utm_medium,
-		    'utm_campaign' => $utm_campaign,
-		    'utm_term' => $utm_term,
-		    'utm_content' => $utm_content
-		);
-		
-		$defaults = yourls_get_option('analytics_defaults');
-		
-		if(!is_array($defaults)) { return $query; }
-		
-		$settings = array_merge($query, $defaults);
-		
-		// These two are required.
-		if(empty($settings['utm_source'])) {
-			$settings['utm_source'] = $utm_source;
-		}
-		if(empty($settings['utm_medium'])) {
-			$settings['utm_medium'] = $utm_medium;
-		}
-		
-		return $settings;
-	}
-	
-	// Display admin page
-	function kws_yourls_add_analytics_do_page() {
-	
-	        // Check if a form was submitted
-	        if( isset( $_POST['analytics_override'] ) )
-	                kws_yourls_add_analytics_update_option();
-	
-	        // Get value from database
-	        $analytics_override = yourls_get_option( 'analytics_override' );
-	        $add_to_form = yourls_get_option( 'add_to_form' );
-	        if($add_to_form === false) { $add_to_form = 'yes'; } // Defaults to yes
-	        
-	        $analytics_defaults = kws_yourls_analytics_defaults();
-	        
-	?>
-		<style type="text/css">
-			 .description { color:#555; font-style:italic; }
-			 #ga_settings { font-size: 120%; }
-			 #ga_settings h4 { 
-			 	margin-bottom: .25em;
-			 }
-			 .submit {
-			 	margin-top: .5em;
-			 	padding-top: .9em;
-			 	border-top: 1px solid #ccc;
-			 	padding-bottom: 1em;
-			 }
-			 .submit input {
-			 	font-size: 14px!important;
-			 }
-			 #more_tracking_code_info { 
-			 	display: none;
-			 	padding:5px 15px 5px 15px;
-			 	background: #fcfcfc;
-			 	border-top: 2px solid #ccc;
-			 }
-			 label.borderbottom {
-			 	border-bottom: 1px dotted;
-			 	cursor: pointer;
-			 }
-			 .req { color: red; }
-		</style>
-		<h2>Google Analytics Settings</h2>
-		
-		<form method="post" id="ga_settings">
-			<h4>Tracking Tags</h4>
-			<p class="description">
-				The settings defined here will be the default Google Analytics tracking script settings. With the current configuration, the following string will be added to shortened URLs:
-				<code style="display:block; float:left;">?<?php 
-					$analytics_defaultsexample = $analytics_defaults;
-					$urlstring = array();
-					foreach($analytics_defaultsexample as $key => $value) {
-						if(empty($value)) {
-							unset($analytics_defaultsexample[$key]);
-							continue;
-						}
-						$urlstring[] = $key.'='.$value;
-					}
-					echo implode('&', $urlstring);?></code>
-			</p>
-			<p class="description"><strong>Note:</strong> These default settings can be overridden by shortening an URL with the tracking tags in place already. If you want to override (or not override), configure the "Override existing tracking tags?" setting below.</p>
-			<p style="clear:both;">
-				<label for="utm_source" style="padding-left:.75em;">Source<span class="req" title="Required">*</span> <input id="utm_source" type="text" size="15" name="analytics_defaults[utm_source]" value="<?php echo $analytics_defaults[utm_source]; ?>"></label>
-				<label for="utm_medium" style="padding-left:.75em;">Medium<span class="req" title="Required">*</span> <input id="utm_medium" type="text" size="15" name="analytics_defaults[utm_medium]" value="<?php echo $analytics_defaults[utm_medium]; ?>"></label>
-				<label for="utm_campaign" style="padding-left:.75em;">Campaign Name <input id="utm_campaign" type="text" size="15" name="analytics_defaults[utm_campaign]" value="<?php echo $analytics_defaults[utm_campaign]; ?>"></label>
-				<label for="utm_term" style="padding-left:.75em;">Term <input id="utm_term" type="text" size="15" name="analytics_defaults[utm_term]" value="<?php echo $analytics_defaults[utm_term]; ?>"></label>
-				<label for="utm_content" style="padding-left:.75em;">Content <input id="utm_content" type="text" size="15" name="analytics_defaults[utm_content]" value="<?php echo $analytics_defaults[utm_content]; ?>"></label>
-			</p>
-			<p class="description" style="text-align:center;"><span class="req">*</span> = required fields</p>
-			<?php kws_yourls_show_analytics_help(); ?>
-			
-			<h4>Override existing tracking tags?</h4>
-	    	<p class="description">If an URL already has Google Analytics tracking tags, do you want to use those instead of your default tracking tags?</p>    
-	        <p><label for="analytics_override_yes">Override with Defaults <input type="radio" id="analytics_override_yes" name="analytics_override" value="1"<?php if($analytics_override) { echo ' checked="checked"';}?> /></label>
-	        <label for="analytics_override_no" style="padding-left:.5em; border-left:1px solid #ccc; margin-left:.5em;">Use Existing (default)<input id="analytics_override_no" type="radio" name="analytics_override" value="0"<?php if(!$analytics_override) { echo ' checked="checked"';}?> /></label></p>
-
-			
-			<h4>Add GA tracking options to Add URL form?</h4>
-	         <p><input type="hidden" name="add_to_form" value="no" /><label for="add_to_form_yes">Add tracking code options to Add URL form <input type="checkbox" id="add_to_form_yes" name="add_to_form" value="yes"<?php if($add_to_form != 'no') { echo ' checked="checked"';}?> /></label></p>
-	        	        
-	        <div class="submit">
-		        <input style="display:block;" type="submit" value="Update Settings">
-	        </div>
-	        
-	    </form>
-	<?php
-	}
-	
-	function kws_yourls_show_analytics_help() {
-	?>
-		<p style="text-align:center;">Not sure what these settings are? <a class="toggle" href="#more_tracking_code_info">Show descriptions of these terms</a></p>
-			<div id="more_tracking_code_info" class="toggle">	
-			    <table class="outline2" border="0" cellpadding="0" cellspacing="5">
-			        <tbody>
-			            <tr>
-			                <td width="201">
-			                    <p><label for="utm_source" class="borderbottom">Source (utm_source)</label></p>
-			                </td>
-			
-			                <td width="666"><span class="req">Required.</span> Use <strong>utm_source</strong> to identify a search engine, newsletter name, or other source.<br>
-			                <em>Example</em>: <tt>utm_source=google</tt></td>
-			            </tr>
-			
-			            <tr>
-			                <td>
-			                    <p><label for="utm_medium" class="borderbottom">Medium (utm_medium)</label></p>
-			                </td>
-			
-			                <td><span class="req">Required.</span> Use <strong>utm_medium</strong> to identify a medium such as email or cost-per-click.<br>
-			                <em>Example</em>: <tt>utm_medium=cpc</tt></td>
-			            </tr>
-						
-						<tr>
-			                <td>
-			                    <p><label for="utm_campaign" class="borderbottom">Campaign Name (utm_campaign)</label></p>
-			                </td>
-			
-			                <td>Used for keyword analysis. Use <strong>utm_campaign</strong> to identify a specific product promotion or strategic campaign.<br>
-			                <em>Example</em>: <tt>utm_campaign=spring_sale</tt></td>
-			            </tr>
-						
-			            <tr>
-			                <td>
-			                    <p><label for="utm_term" class="borderbottom">Term (utm_term)</label></p>
-			                </td>
-			
-			                <td>Used for paid search. Use <strong>utm_term</strong> to note the keywords for this ad.<br>
-			                <em>Example</em>: <tt>utm_term=running+shoes</tt></td>
-			            </tr>
-			
-			            <tr>
-			                <td>
-			                    <p><label for="utm_content" class="borderbottom">Content (utm_content)</label></p>
-			                </td>
-			
-			                <td>Used for A/B testing and content-targeted ads. Use <strong>utm_content</strong> to differentiate ads or links that point to the same URL.<br>
-			                <em>Examples</em>: <tt>utm_content=logolink</tt> <em>or</em> <tt>utm_content=textlink</tt></td>
-			            </tr>
-			        </tbody>
-			    </table>
-			    <p style="text-align:center; font-weight:bold;"><a href="http://www.google.com/support/googleanalytics/bin/answer.py?answer=55578" target="_blank">Learn more about Google Analytics link tagging</a></p>
-			</div>
-		<?php
-	}
-	
-	// Update option in database
-	function kws_yourls_add_analytics_update_option() {
-	        if(isset($_POST['analytics_override'])) {
-				yourls_update_option( 'analytics_override', !empty($_POST['analytics_override']));
-	        }
-	        if(isset($_POST['add_to_form']) && $_POST['add_to_form'] == 'yes' || $_POST['add_to_form'] == 'no') {
-				yourls_update_option( 'add_to_form', $_POST['add_to_form']);
-	        }
-	        if(isset($_POST['analytics_defaults'])) {
-	        	$analytics_defaults = array();
-	        	if(is_array($_POST['analytics_defaults'])) {
-	        		foreach($_POST['analytics_defaults'] as $k => $v) {
-	        			$analytics_defaults[$k] = yourls_sanitize_title($v);
-	        		}
-					yourls_update_option( 'analytics_defaults', $analytics_defaults);
-				}
-	        }
-	}
+// Register our plugin admin page
+yourls_add_action( 'plugins_loaded', 'kws_yourls_add_analytics_add_page' );
+function kws_yourls_add_analytics_add_page() {
+	yourls_register_plugin_page( 'google_analytics', 'Google Analytics', 'kws_yourls_add_analytics_do_page' );
+	// parameters: page slug, page title, and function that will display the page itself
 }
 
+function kws_yourls_analytics_defaults() {
+	// Define defaults
+	$utm_campaign = '';
+	$utm_medium = 'urlshortener';
+	$utm_term = $utm_content = '';
+	$utm_source = preg_replace('/(?:.*?)\:\/\/(.+)/ism', '$1', YOURLS_SITE); // http://exam.pl becomes exam.pl
+	
+	$query = array(
+		'utm_source' => $utm_source,
+		'utm_medium' => $utm_medium,
+		'utm_campaign' => $utm_campaign,
+		'utm_term' => $utm_term,
+		'utm_content' => $utm_content
+	);
+	
+	$defaults = yourls_get_option('analytics_defaults');
+	
+	if(!is_array($defaults)) { return $query; }
+	
+	$settings = array_merge($query, $defaults);
+	
+	// These two are required.
+	if(empty($settings['utm_source'])) {
+		$settings['utm_source'] = $utm_source;
+	}
+	if(empty($settings['utm_medium'])) {
+		$settings['utm_medium'] = $utm_medium;
+	}
+	
+	return $settings;
+}
+
+// Display admin page
+function kws_yourls_add_analytics_do_page() {
+
+	// Check if a form was submitted
+	if( isset( $_POST['analytics_override'] ) )
+			kws_yourls_add_analytics_update_option();
+
+	// Get value from database
+	$analytics_override = yourls_get_option( 'analytics_override' );
+	$add_to_form = yourls_get_option( 'add_to_form' );
+	if($add_to_form === false) { $add_to_form = 'yes'; } // Defaults to yes
+	
+	$analytics_defaults = (array)kws_yourls_analytics_defaults();
+
+?>
+	<style type="text/css">
+		 .description { color:#555; font-style:italic; }
+		 #ga_settings { font-size: 120%; }
+		 #ga_settings h4 { 
+			margin-bottom: .25em;
+		 }
+		 .submit {
+			margin-top: .5em;
+			padding-top: .9em;
+			border-top: 1px solid #ccc;
+			padding-bottom: 1em;
+		 }
+		 .submit input {
+			font-size: 14px!important;
+		 }
+		 #more_tracking_code_info { 
+			display: none;
+			padding:5px 15px 5px 15px;
+			background: #fcfcfc;
+			border-top: 2px solid #ccc;
+		 }
+		 label.borderbottom {
+			border-bottom: 1px dotted;
+			cursor: pointer;
+		 }
+		 .req { color: red; }
+	</style>
+	<h2>Google Analytics Settings</h2>
+	
+	<form method="post" id="ga_settings">
+		<h4>Tracking Tags</h4>
+		<p class="description">
+			The settings defined here will be the default Google Analytics tracking script settings. With the current configuration, the following string will be added to shortened URLs:<br/>
+			<code>?<?php 
+				$analytics_defaultsexample = $analytics_defaults;
+				$urlstring = array();
+				foreach($analytics_defaultsexample as $key => $value) {
+					if(empty($value)) {
+						unset($analytics_defaultsexample[$key]);
+						continue;
+					}
+					$urlstring[] = $key.'='.$value;
+				}
+				echo implode('&', $urlstring);?>
+			</code><br/>
+		</p>
+		<p class="description"><strong>Note:</strong> These default settings can be overridden by shortening an URL with the tracking tags in place already. If you want to override (or not override), configure the "Override existing tracking tags?" setting below.</p>
+		<p style="clear:both;">
+			<label for="utm_source" style="padding-left:.75em;">Source<span class="req" title="Required">*</span> <input id="utm_source" type="text" size="15" name="analytics_defaults[utm_source]" value="<?php echo $analytics_defaults['utm_source']; ?>"></label>
+			<label for="utm_medium" style="padding-left:.75em;">Medium<span class="req" title="Required">*</span> <input id="utm_medium" type="text" size="15" name="analytics_defaults[utm_medium]" value="<?php echo $analytics_defaults['utm_medium']; ?>"></label>
+			<label for="utm_campaign" style="padding-left:.75em;">Campaign Name <input id="utm_campaign" type="text" size="15" name="analytics_defaults[utm_campaign]" value="<?php echo $analytics_defaults['utm_campaign']; ?>"></label>
+			<label for="utm_term" style="padding-left:.75em;">Term <input id="utm_term" type="text" size="15" name="analytics_defaults[utm_term]" value="<?php echo $analytics_defaults['utm_term']; ?>"></label>
+			<label for="utm_content" style="padding-left:.75em;">Content <input id="utm_content" type="text" size="15" name="analytics_defaults[utm_content]" value="<?php echo $analytics_defaults['utm_content']; ?>"></label>
+		</p>
+		<p class="description" style="text-align:center;"><span class="req">*</span> = required fields</p>
+		<?php kws_yourls_show_analytics_help(); ?>
+		
+		<h4>Override existing tracking tags?</h4>
+		<p class="description">If an URL already has Google Analytics tracking tags, do you want to use those instead of your default tracking tags?</p>    
+		<p><label for="analytics_override_yes">Override with Defaults <input type="radio" id="analytics_override_yes" name="analytics_override" value="1"<?php if($analytics_override) { echo ' checked="checked"';}?> /></label>
+		<label for="analytics_override_no" style="padding-left:.5em; border-left:1px solid #ccc; margin-left:.5em;">Use Existing (default)<input id="analytics_override_no" type="radio" name="analytics_override" value="0"<?php if(!$analytics_override) { echo ' checked="checked"';}?> /></label></p>
+
+		
+		<h4>Add GA tracking options to Add URL form?</h4>
+		 <p><input type="hidden" name="add_to_form" value="no" /><label for="add_to_form_yes">Add tracking code options to Add URL form <input type="checkbox" id="add_to_form_yes" name="add_to_form" value="yes"<?php if($add_to_form != 'no') { echo ' checked="checked"';}?> /></label></p>
+					
+		<div class="submit">
+			<input style="display:block;" type="submit" value="Update Settings">
+		</div>
+		
+	</form>
+<?php
+}
+
+function kws_yourls_show_analytics_help() {
+?>
+	<p style="text-align:center;">Not sure what these settings are? <a class="toggle" href="#more_tracking_code_info">Show descriptions of these terms</a></p>
+		<div id="more_tracking_code_info" class="toggle">	
+			<table class="outline2" border="0" cellpadding="0" cellspacing="5">
+				<tbody>
+					<tr>
+						<td width="201">
+							<p><label for="utm_source" class="borderbottom">Source (utm_source)</label></p>
+						</td>
+		
+						<td width="666"><span class="req">Required.</span> Use <strong>utm_source</strong> to identify a search engine, newsletter name, or other source.<br>
+						<em>Example</em>: <tt>utm_source=google</tt></td>
+					</tr>
+		
+					<tr>
+						<td>
+							<p><label for="utm_medium" class="borderbottom">Medium (utm_medium)</label></p>
+						</td>
+		
+						<td><span class="req">Required.</span> Use <strong>utm_medium</strong> to identify a medium such as email or cost-per-click.<br>
+						<em>Example</em>: <tt>utm_medium=cpc</tt></td>
+					</tr>
+					
+					<tr>
+						<td>
+							<p><label for="utm_campaign" class="borderbottom">Campaign Name (utm_campaign)</label></p>
+						</td>
+		
+						<td>Used for keyword analysis. Use <strong>utm_campaign</strong> to identify a specific product promotion or strategic campaign.<br>
+						<em>Example</em>: <tt>utm_campaign=spring_sale</tt></td>
+					</tr>
+					
+					<tr>
+						<td>
+							<p><label for="utm_term" class="borderbottom">Term (utm_term)</label></p>
+						</td>
+		
+						<td>Used for paid search. Use <strong>utm_term</strong> to note the keywords for this ad.<br>
+						<em>Example</em>: <tt>utm_term=running+shoes</tt></td>
+					</tr>
+		
+					<tr>
+						<td>
+							<p><label for="utm_content" class="borderbottom">Content (utm_content)</label></p>
+						</td>
+		
+						<td>Used for A/B testing and content-targeted ads. Use <strong>utm_content</strong> to differentiate ads or links that point to the same URL.<br>
+						<em>Examples</em>: <tt>utm_content=logolink</tt> <em>or</em> <tt>utm_content=textlink</tt></td>
+					</tr>
+				</tbody>
+			</table>
+			<p style="text-align:center; font-weight:bold;"><a href="http://www.google.com/support/googleanalytics/bin/answer.py?answer=55578" target="_blank">Learn more about Google Analytics link tagging</a></p>
+		</div>
+	<?php
+}
+
+// Update option in database
+function kws_yourls_add_analytics_update_option() {
+	if(isset($_POST['analytics_override'])) {
+		yourls_update_option( 'analytics_override', !empty($_POST['analytics_override']));
+	}
+	if(isset($_POST['add_to_form']) && $_POST['add_to_form'] == 'yes' || $_POST['add_to_form'] == 'no') {
+		yourls_update_option( 'add_to_form', $_POST['add_to_form']);
+	}
+	if(isset($_POST['analytics_defaults'])) {
+		$analytics_defaults = array();
+		if(is_array($_POST['analytics_defaults'])) {
+			foreach($_POST['analytics_defaults'] as $k => $v) {
+				$analytics_defaults[$k] = yourls_sanitize_title($v);
+			}
+			yourls_update_option( 'analytics_defaults', $analytics_defaults);
+		}
+	}
+}
 
 yourls_add_filter( 'custom_url', 'kws_yourls_custom_url', 999);
 
