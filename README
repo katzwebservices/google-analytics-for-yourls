@@ -3,6 +3,9 @@ http://www.seodenver.com/add-google-analytics-link-tagging-yourls/
 
 == Changelog ==
 
+= 1.0.3 =
+* Stricter coding to prevent notices.
+
 = 1.0.2 =
 * Committed some pull requests to improve functionality, also spelling errors.
 
