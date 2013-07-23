@@ -339,7 +339,7 @@ function add() {
 }
 
 	jQuery(document).ready(function($){
-		$('a.toggle').live('load click', function(e) {
+		$('a.toggle').on('click', null, function(e) {
 			e.preventDefault();
 			var $div = $($(this).attr('href'));
 			var $that = $(this);
