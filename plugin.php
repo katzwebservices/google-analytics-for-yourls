@@ -339,6 +339,17 @@ function add() {
 }
 
 	jQuery(document).ready(function($){
+		$('#new_url_form').append('<a style="display:block" class="toggle" href="#ga_tracking_options">Show GA Tracking Options</a><div class="toggle" id="ga_tracking_options" style="display:none;"><?php
+
+	$sources = kws_yourls_analytics_defaults();
+
+	foreach($sources as $source => $value) {
+		$sourceNice = preg_replace('/(?:.*?)\_(.+)/ism', '$1', $source);
+		echo '<label for="'.$source.'" style="padding-left:.75em;">'.$sourceNice.' <input id="'.$source.'" type="text" size="12" name="'.$source.'" value="'.$value.'" /></label>';
+	}
+
+
+	?></div><div style="clear:both;"></div>');
 		$('a.toggle').on('click', null, function(e) {
 			e.preventDefault();
 			var $div = $($(this).attr('href'));
@@ -352,17 +363,6 @@ function add() {
 			});
 			return false;
 		});
-		$('#new_url_form').append('<a style="display:block" class="toggle" href="#ga_tracking_options">Show GA Tracking Options</a><div class="toggle" id="ga_tracking_options" style="display:none;"><?php
-
-	$sources = kws_yourls_analytics_defaults();
-
-	foreach($sources as $source => $value) {
-		$sourceNice = preg_replace('/(?:.*?)\_(.+)/ism', '$1', $source);
-		echo '<label for="'.$source.'" style="padding-left:.75em;">'.$sourceNice.' <input id="'.$source.'" type="text" size="12" name="'.$source.'" value="'.$value.'" /></label>';
-	}
-
-
-	?></div><div style="clear:both;"></div>');
 
 	});
 
