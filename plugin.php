@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Google Analytics
-Plugin URI: http://www.seodenver.com/yourls-analytics/
+Plugin URI: http://katz.co/yourls-analytics/
 Description: Easily add Google Analytics tracking tags to your generated links.
-Version: 1.0.4
+Version: 1.1
 Author: Katz Web Services, Inc.
 Author URI: http://www.katzwebservices.com
 Settings: <a href="?page=google_analytics">Configure settings</a>
@@ -202,7 +202,7 @@ function kws_yourls_add_analytics_update_option() {
 	if (isset($_POST['analytics_override'])) {
 		yourls_update_option('analytics_override', !empty($_POST['analytics_override']));
 	}
-	if (isset($_POST['add_to_form']) && $_POST['add_to_form'] == 'yes' || $_POST['add_to_form'] == 'no') {
+	if (isset($_POST['add_to_form']) && $_POST['add_to_form'] === 'yes' || $_POST['add_to_form'] === 'no') {
 		yourls_update_option('add_to_form', $_POST['add_to_form']);
 	}
 	if (isset($_POST['analytics_defaults'])) {
@@ -306,7 +306,7 @@ function add_link() {
 	}
 	var newurl = $("#add-url").val();
 	var nonce = $("#nonce-add").val();
-	if ( !newurl || newurl == 'http://' || newurl == 'https://' ) {
+	if ( !newurl || newurl === 'http://' || newurl === 'https://' ) {
 		$("#add-url").css({'border-color':'red', 'color':'red'}).focus();
 		return;
 	}
@@ -318,7 +318,7 @@ function add_link() {
 		ajaxurl,
 		{action:'add', url: newurl, keyword: keyword, nonce: nonce, allfields: allfields},
 		function(data){
-			if(data.status == 'success') {
+			if(data.status === 'success') {
 				$('#main_table tbody').prepend( data.html ).trigger("update");
 				$('#nourl_found').css('display', 'none');
 				zebra_table();

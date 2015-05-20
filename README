@@ -2,6 +2,10 @@
 
 ## Changelog
 
+### 1.1
+
+* Fixes compatibility with YOURLS 1.7+. Thanks [@ifnull](https://github.com/ifnull) and [@sirtet](https://github.com/sirtet)
+
 ### 1.0.4
 
 * Use jQuery `.on()` instead of `.live()`
